@@ -199,7 +199,7 @@ class GoogleEmbedderClient(ModelClient):
             
         # Set default model if not provided
         if "model" not in final_model_kwargs:
-            final_model_kwargs["model"] = "text-embedding-004"
+            final_model_kwargs["model"] = "gemini-embedding-001"
             
         return final_model_kwargs
 
@@ -239,8 +239,10 @@ class GoogleEmbedderClient(ModelClient):
                 response = genai.embed_content(**api_kwargs)
             elif "contents" in api_kwargs:
                 # Batch embedding - Google AI supports batch natively
-                contents = api_kwargs.pop("contents")
-                response = genai.embed_content(content=contents, **api_kwargs)
+                # Use a copy to avoid mutating api_kwargs (breaks backoff retries)
+                call_kwargs = api_kwargs.copy()
+                contents = call_kwargs.pop("contents")
+                response = genai.embed_content(content=contents, **call_kwargs)
             else:
                 raise ValueError("Either 'content' or 'contents' must be provided")
                 
